@@ -1,0 +1,133 @@
+
+**Data 605 - Assignment 12**
+
+**Hazal Gunduz**
+
+The attached who.csv dataset contains real-world data from 2008. The variables included follow.
+
+**Country:** name of the country
+
+**LifeExp:** average life expectancy for the country in years
+
+**InfantSurvival:** proportion of those surviving to one year or more
+
+**Under5Survival:** proportion of those surviving to five years or more
+
+**TBFree:** proportion of the population without TB.
+
+**PropMD:** proportion of the population who are MDs
+
+**PropRN:** proportion of the population who are RNs
+
+**PersExp:** mean personal expenditures on healthcare in US dollars at average exchange rate
+
+**GovtExp:** mean government expenditures per capita on healthcare, US dollars at average exchange rate
+
+**TotExp:** sum of personal and government expenditures.
+
+**1.** Provide a scatterplot of LifeExp~TotExp, and run simple linear regression. Do not transform the variables. Provide and interpret the F statistics, R^2, standard error, and p-values only. Discuss whether the assumptions of simple linear regression met.
+
+**Loading the Data**
+
+```{r}
+who <- read.csv("~/Downloads/who.csv")
+summary(who)
+```
+
+```{r}
+head(who, 10)
+```
+
+**Scatterplot of the LifeExp ~ TotExp and linear regression.**
+
+```{r}
+#Simple linear regression of LifeExp ~ TotExp
+who_lm <- lm(LifeExp ~ TotExp, data = who)
+summary(who_lm)
+```
+
+R-squared of 0.2577 shows that 25.77% of the model data variation. We see that assumptions of simple linear regression aren't met. The variable that we used shows for 25.77% of the variance.
+
+```{r}
+#Scatterplot of the LifeExp ~ TotExp
+plot(LifeExp ~ TotExp, data = who, 
+     main = "Life Expectancy vs Total Expenditures",
+     xlab = "Total Expenditures", ylab = "Life Expectancy")
+abline(who_lm, col = "blue")
+```
+
+```{r}
+plot(who_lm$fitted.values, who_lm$residuals, 
+     main = "Residuals Plot",
+     xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "green")
+```
+
+**2.** Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6). Raise total expenditures to the 0.06 power (nearly a log transform, TotExp^.06). Plot LifeExp^4.6 as a function of TotExp^.06, and r re-run the simple regression model using the transformed variables. Provide and interpret the F statistics, R^2, standard error, and p-values. Which model is "better?"
+
+```{r}
+#Life Expectancy ^ 4.6
+who_LifeExp <- who$LifeExp ^ (4.6)
+
+#Total Expenditures ^ 0.06
+who_TotExp <- who$TotExp ^ (0.06)
+```
+
+
+```{r}
+#Scatterplot transformed variables
+plot(who_TotExp ~ who_LifeExp, 
+     main = "Total Expenditure vs Life Expectancy", 
+     xlab = "TotalExpenditure", ylab = "LifeExpentancy")
+```
+
+```{r}
+#Simple regression LifeExp ~ TotExp
+who_lm2 <- lm(who_LifeExp ~ who_TotExp, data = who)
+summary(who_lm2)
+```
+
+This model is better. The plot is more linear than first linear. R-squared value has increased. 
+
+**3.** Using the results from 3, forecast life expectancy when TotExp^.06 =1.5. Then forecast life expectancy when TotExp^.06=2.5. 
+
+```{r}
+new_data <- data.frame(who_TotExp = 1.5)
+predict_LifeExp <- predict(who_lm2, newdata = new_data) ^ (1/4.6)
+predict_LifeExp
+```
+
+```{r}
+new_data2 <- data.frame(who_TotExp = 2.5)
+predict_LifeExp2 <- predict(who_lm2, newdata = new_data2) ^ (1/4.6)
+predict_LifeExp2
+```
+
+The model predicts a life expectancy of ~63 and ~87.
+
+**4.** Build the following multiple regression model and interpret the F Statistics, R^2, standard error, and p-values. How good is the model? LifeExp = b0+b1 x PropMd + b2 x TotExp +b3 x PropMD x TotExp
+
+```{r}
+#multiple regression model
+who_lm3 <- lm(LifeExp ~ PropMD + TotExp + (PropMD * TotExp), data = who)
+summary(who_lm3)
+```
+
+**F-statistic:** 34.49 on 3 and 186 DF.The 34.49 F statistic means that the model is significant at the 0.01 level, as the corresponding p-value (2.2e-16) is less than 0.01.
+
+**R-squared:** 0.3471. This means that 34.71% of the change in life expectancy is explained by the sum of total expenditures in the model.
+
+**Standard error:** 8.765 on 186 degrees of freedom. The standard error of 8.765 means that the average difference between the predicted and actual values of the dependent variable is 8.765.
+
+**P-values:** 2.2e-16, PropMD:2.32e-07, TotExp:9.39e-14, PropMD:TotExp:6.35e-05. These p values for the total expenditure variable are significant at the 0.01. This means that the total expenditure, Proportion of MD are all associated with life expectancy variable in the model.
+
+**5.** Forecast LifeExp when PropMD=.03 and TotExp = 14. Does this forecast seem realistic? Why or why not?
+
+```{r}
+predict(who_lm3, data.frame(PropMD = 0.03, TotExp = 14))
+```
+
+The forecast doesn't seem very realistic as humans don't live that long.
+
+RPubs =>  https://rpubs.com/gunduzhazal/1032396
+
